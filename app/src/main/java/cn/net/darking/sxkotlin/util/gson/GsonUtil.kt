@@ -20,8 +20,8 @@ class GsonUtil{
      * *
      * @return
      */
-    fun getAppBean(json: String): T {
-        return getGson().fromJson<T>(json, T::class.java!!)
+    inline fun <reified T> getJsonBean(json: String): T {
+        return getGson().fromJson<T>(json, T::class.java)
         //        return datasBean;
     }
 }

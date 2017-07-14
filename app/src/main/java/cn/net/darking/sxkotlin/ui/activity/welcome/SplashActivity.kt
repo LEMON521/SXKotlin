@@ -2,37 +2,46 @@ package cn.net.darking.sxkotlin.ui.activity.welcome
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import android.text.TextUtils
+import android.widget.Toast
 import cn.net.darking.sxkotlin.R
 import cn.net.darking.sxkotlin.bean.app.AppBean
 import cn.net.darking.sxkotlin.util.constant.ConstantSPKey
 import cn.net.darking.sxkotlin.util.constant.ConstantSPName
 import cn.net.darking.sxkotlin.util.constant.ConstantUrl
+import cn.net.darking.sxkotlin.util.gson.GsonUtil
 import cn.net.darking.sxkotlin.util.sp.SPUtil
 import cn.net.darking.sxkotlin.util.xutil.HttpUtils
+import org.xutils.common.Callback
+import org.xutils.common.util.LogUtil
 import org.xutils.http.RequestParams
 
 class SplashActivity : Activity() {
-
+    lateinit var activity: SplashActivity
     lateinit var sp: SPUtil
-    lateinit var appBean :AppBean
+    lateinit var appBean: AppBean
+    lateinit var gson: GsonUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-
+        activity = this
+        sp = SPUtil()
+        gson = GsonUtil()
         clearPushNum()
 
-
+ //       getDataFromService()
     }
 
     /**
      * 清除已缓存的推送数字信息
      */
     fun clearPushNum() {
-        sp = SPUtil()
+
         /**顶部栏**/
         sp.setTrain(this, 0)
         sp.setKnowledge(this, 0)
@@ -82,6 +91,7 @@ class SplashActivity : Activity() {
             sp.setValueInt(this, ConstantSPName.PUSHNUM, "$key", 0)//名为pushNum的xml
         }
 
+
     }
 
     /**
@@ -91,25 +101,28 @@ class SplashActivity : Activity() {
 
 
         val postUtils = HttpUtils()
-        val url = ConstantUrl.API_BASE + "/apps/" + sp.getValueStr(this,ConstantSPName.USERCONFIG,ConstantSPKey.USER_KEY_APPID) + "/mobile.json"
+        val url = ConstantUrl.API_BASE + "/apps/" + sp.getValueStr(this, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_APPID) + "/mobile.json"
         val initUrl = ConstantUrl.INIT_URL
         val params = RequestParams(initUrl)
         postUtils.GET(this, params)
-        postUtils.OnCallBack(object : HttpUtils.OnSetData() {
+        postUtils.OnCallBack(object : HttpUtils.OnSetData {
+
             override fun onSuccess(strJson: String) {
-                appBean = GsonUtil.getAppBean(strJson)
-                SPUtil.setAppid(mActivity, appBean.appid)
-                SPUtil.setSecret(mActivity, appBean.secret)
-                SPUtil.setApiUpload(mActivity, appBean.api_upload)
-                SPUtil.setApiAuth(mActivity, appBean.api_auth)
-                SPUtil.setResetPasswordUrl(mActivity, appBean.login.passreset)
-                SPUtil.setLogoutApi(mActivity, appBean.login.logoutapi)
-                SPUtil.setApiUser(mActivity, appBean.api_user)
-                SPUtil.setUser_ApiData(mActivity, appBean.api_data)
+                appBean = gson.getJsonBean(strJson)
+
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_APPID, appBean.appid + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_SECRET, appBean.secret + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_API_UPLOAD, appBean.api_upload + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_API_AUTH, appBean.api_auth + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_API_RESET_PASSWORD, appBean.login?.passreset + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_API_LOGOUT, appBean.login?.logoutapi + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_APPID, appBean.api_user + "")
+                sp.setValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_APPID, appBean.api_data + "")
 
 
                 //LogUtil.e("----######------getMobileJson-----====------" + strJson);
-                SPUtil.setMobileJson(mActivity, strJson)
+                //将mobile.json本地化
+                sp.setValueStr(activity, ConstantSPName.BEAN_JSON_MOBILE, ConstantSPKey.USER_KEY_USER_MOBILE, strJson)
 
                 if (appBean.authentication) {
                     initAppInfo()
@@ -119,18 +132,42 @@ class SplashActivity : Activity() {
             }
 
             override fun onError(ex: Throwable, isOnCallback: Boolean) {
-                MyToast.showLong(context, "请打开网络后重新启动程序！")
+                Toast.makeText(activity, "请打开网络后重新启动程序", Toast.LENGTH_LONG)
                 SystemClock.sleep(2000)
                 finish()
             }
 
-            fun onCancelled(cex: Callback.CancelledException) {
+            override fun onCancelled(cex: Callback.CancelledException) {
 
             }
 
-            fun onFinished() {
+            override fun onFinished() {
 
             }
         })
     }
+
+
+    /**
+     * 初始化程序信息
+     */
+    private fun initAppInfo() {
+        if (TextUtils.isEmpty(sp.getValueStr(activity, ConstantSPName.USERCONFIG, ConstantSPKey.USER_KEY_TOKEN))) {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        } else {
+
+//            val intent = Intent(this, NewInitInfoActivity::class.java)
+            //将返回的json传递过去，在下一个页面将必要的参数本地化
+            // LogUtil.e("datasBean.data.loaders.size()" +datasBean.data.loaders.size());
+            LogUtil.e("----######------initAppInfo-----====------" + "getToken--------不是----空" + intent)
+
+            startActivity(intent)
+            finish()
+
+        }
+
+    }
+
 }

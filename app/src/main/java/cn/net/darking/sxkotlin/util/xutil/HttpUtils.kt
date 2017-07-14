@@ -19,7 +19,7 @@ import org.xutils.x
 /**
  * Created by Zrzc on 2017/7/13.
  */
-class HttpUtils {
+class HttpUtils (){
 
     private var mOnCallBack: OnSetData? = null
     private var mActivity: Context? = null
@@ -89,6 +89,7 @@ class HttpUtils {
      */
     fun POST(activity: Context, params: RequestParams) {
         mActivity = activity
+        sp = SPUtil()
         getParams(params)
         LogUtil.e("================params============" + params.toString())
         x.http().post(params, callBack)
@@ -100,6 +101,7 @@ class HttpUtils {
      */
     fun GET(activity: Context, params: RequestParams) {
         mActivity = activity
+        sp = SPUtil()
         getParams(params)
         LogUtil.e("================params============" + params.toString())
         x.http().get(params, callBack)

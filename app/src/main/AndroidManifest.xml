@@ -3,6 +3,7 @@
     package="cn.net.darking.sxkotlin">
 
     <application
+        android:name=".app.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -16,7 +17,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.activity.BaseActivity"></activity>
+        <activity android:name=".ui.activity.welcome.LoginActivity" />
         <activity android:name=".ui.base.MainActivity" />
-    </application>
 
+
+        <!--联网权限-->
+
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
